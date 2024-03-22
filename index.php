@@ -1,3 +1,49 @@
+<?php
+//session_start(); // Khởi tạo session
+
+include "class.database.php";
+$records_per_page = 5;
+
+// Tính toán tổng số trang
+$total_records = mysqli_num_rows(mysqli_query($conn, "SELECT * FROM Customers"));
+$total_pages = ceil($total_records / $records_per_page);
+
+// Xác định trang hiện tại
+$page = isset($_GET['page']) ? $_GET['page'] : 1;
+
+// Tính toán offset
+$offset = ($page - 1) * $records_per_page;
+
+// Sử dụng biến $query để thực hiện truy vấn phân trang
+$query = "SELECT * FROM Customers LIMIT $offset, $records_per_page";
+$result = mysqli_query($conn, $query);
+
+// Check login session
+if (!isset($_SESSION['login'])) {
+    header("Location:login.php");
+    exit; // Dừng việc thực thi tiếp
+}
+
+// Add new customer
+if (isset($_POST['add_customer'])) {
+    // Retrieve form data
+    $customer_name = $_POST['customer_name'];
+    $phone = $_POST['phone'];
+    $address = $_POST['address'];
+    $city = $_POST['city'];
+    $luong = $_POST['luong'];
+
+    // Insert data into database
+    $insert_query = "INSERT INTO Customers (CustomerName, Phone, Address, City, Luong) VALUES ('$customer_name', '$phone', '$address', '$city', '$luong')";
+    $insert_result = mysqli_query($conn, $insert_query);
+    if (!$insert_result) {
+        echo "Error: " . mysqli_error($conn);
+        exit;
+    }
+}
+
+?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -22,34 +68,6 @@
     </style>
 </head>
 <body>
-
-<?php
-include "class.database.php";
-
-// Check login session
-if (!$_SESSION['login']) {
-    header("Location:login.php");
-    exit; // Stop further execution
-}
-
-global $conn;
-
-// Add new customer
-if (isset($_POST['add_customer'])) {
-    // Retrieve form data
-    $customer_name = $_POST['customer_name'];
-    $phone = $_POST['phone'];
-    $address = $_POST['address'];
-    $city = $_POST['city'];
-    $luong = $_POST['luong'];
-
-    // Insert data into database
-    $insert_query = "INSERT INTO Customers (CustomerName, Phone, Address, City, Luong) VALUES ('$customer_name', '$phone', '$address', '$city', '$luong')";
-    mysqli_query($conn, $insert_query);
-}
-
-$result = mysqli_query($conn, "SELECT * FROM Customers");
-?>
 
 <div class="container">
     <div class="card-body">
@@ -78,7 +96,7 @@ $result = mysqli_query($conn, "SELECT * FROM Customers");
             <table class="table table-bordered" id="dataTable">
                 <thead>
                     <tr>
-                        <th>Mã Nhân Viên</th>
+                        <th>Mã Nhân Viên
                         <th>Tên Nhân Viên</th>
                         <th>Giới tính</th>
                         <th>Nơi Sinh</th>
@@ -105,25 +123,24 @@ $result = mysqli_query($conn, "SELECT * FROM Customers");
                     <?php endwhile; ?>
                 </tbody>
             </table>
+            <!-- Phân trang -->
+            <nav aria-label="Page navigation">
+                <ul class="pagination justify-content-center">
+                    <li class="page-item <?php if($page <= 1) echo 'disabled'; ?>">
+                        <a class="page-link" href="?page=<?php echo ($page > 1) ? $page - 1 : 1; ?>" tabindex="-1" aria-disabled="true">Previous</a>
+                    </li>
+                    <?php for($i = 1; $i <= $total_pages; $i++) : ?>
+                        <li class="page-item <?php if($page == $i) echo 'active'; ?>">
+                            <a class="page-link" href="?page=<?php echo $i; ?>"><?php echo $i; ?></a>
+                        </li>
+                    <?php endfor; ?>
+                    <li class="page-item <?php if($page >= $total_pages) echo 'disabled'; ?>">
+                        <a class="page-link" href="?page=<?php echo ($page < $total_pages) ? $page + 1 : $total_pages; ?>">Next</a>
+                    </li>
+                </ul>
+            </nav>
         </div>
-
+        </div>
         <!-- Link Logout -->
-        <a href="logout.php" class="btn btn-secondary">Logout</a>
-    </div>
+    <a href="logout.php" class="btn btn-secondary">Logout</a>
 </div>
-
-<!-- JavaScript để điều khiển hiển thị form thêm khách hàng -->
-<script>
-    function toggleAddCustomerForm() {
-        var addCustomerForm = document.getElementById("addCustomerForm");
-        if (addCustomerForm.style.display === "none") {
-            addCustomerForm.style.display = "block";
-        } else {
-            addCustomerForm.style.display = "none";
-        }
-    }
-    
-</script>
-
-</body>
-</html>
