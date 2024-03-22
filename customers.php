@@ -28,6 +28,40 @@ if ($_SESSION['login'] !== 'admin') {
     header("Location:index.php");
     exit; // Stop further execution
 }
+if (isset($_POST['add_customer'])) {
+    $customer_name = $_POST['customer_name'];
+    $phone = $_POST['phone'];
+    $address = $_POST['address'];
+    $city = $_POST['city'];
+    $luong = $_POST['luong'];
+
+    // Thực hiện truy vấn SQL để thêm khách hàng mới
+    $insert_query = "INSERT INTO Customers (CustomerName, Phone, Address, City, Luong) VALUES ('$customer_name', '$phone', '$address', '$city', '$luong')";
+    mysqli_query($conn, $insert_query);
+    // Sau khi thêm, chuyển hướng về trang hiện tại để cập nhật dữ liệu mới
+    header("Location: ".$_SERVER['PHP_SELF']);
+    exit;
+}
+if (isset($_GET['delete_customer'])) {
+    $customer_id = $_GET['delete_customer'];
+    // Thực hiện truy vấn SQL để xóa khách hàng
+    $delete_query = "DELETE FROM Customers WHERE CustomerID = '$customer_id'";
+    mysqli_query($conn, $delete_query);
+    // Sau khi xóa, chuyển hướng về trang hiện tại để cập nhật dữ liệu mới
+    header("Location: ".$_SERVER['PHP_SELF']);
+    exit;
+}
+
+// Truy vấn SQL để lấy dữ liệu khách hàng theo trang
+$query = "SELECT * FROM Customers LIMIT $offset, $records_per_page";
+$result = mysqli_query($conn, $query);
+
+// Kiểm tra lỗi khi thực hiện truy vấn
+if (!$result) {
+    echo "Error: " . mysqli_error($conn);
+    exit;
+}
+
 ?>
 
 <!DOCTYPE html>
@@ -106,12 +140,12 @@ if ($_SESSION['login'] !== 'admin') {
             <table class="table table-bordered" id="dataTable">
                 <thead>
                     <tr>
-                        <th>Customer ID</th>
-                        <th>Customer Name</th>
-                        <th>Phone</th>
-                        <th>Address</th>
-                        <th>City</th>
-                        <th>Luong</th>
+                        <th>Mã Nhân Viên</th>
+                        <th>Tên Nhân Viên</th>
+                        <th>Giới Tính</th>
+                        <th>Nơi Sinh</th>
+                        <th>Tên Phòng</th>
+                        <th>Lương</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
